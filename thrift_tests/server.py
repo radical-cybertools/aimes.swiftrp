@@ -23,7 +23,7 @@ import sys, glob
 sys.path.append('gen-py')
 #sys.path.insert(0, glob.glob('../../lib/py/build/lib.*')[0])
 
-from yradical import RadicalPilotInterface
+from radical_interface import RadicalPilotInterface
 
 from thrift.transport import TSocket
 from thrift.transport import TTransport
@@ -46,6 +46,9 @@ class RadicalPilotHandler:
     print "Status task :", task_name
     return "Status task: [ACTIVE/DONE]"
 
+  def server_die(self, die_string):
+    print "Server terminating. Received message: ", die_string
+    exit(0)
 
   def getStruct(self, key):
     print 'getStruct(%d)' % (key)

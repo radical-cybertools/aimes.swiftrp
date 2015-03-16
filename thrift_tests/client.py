@@ -22,13 +22,26 @@
 import sys, glob
 sys.path.append('gen-py')
 
-from yradical import RadicalPilotInterface
-from yradical.ttypes import *
+from radical_interface import RadicalPilotInterface
+from radical_interface.ttypes import *
 
 from thrift import Thrift
 from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
+
+import timeit
+
+
+def submit_task(client, name):
+  return client.submit_task(name)
+
+def cancel_task(client, name):
+  return client.cancel_task(name)
+
+def status_task(client, name):
+  return client.status_task(name)
+
 
 try:
 
@@ -51,6 +64,8 @@ try:
   print client.status_task("asdsdad")
   print client.cancel_task("asdasda")
 
+  # Kill server
+  client.server_die("All work done")
   # Close!
   transport.close()
 
