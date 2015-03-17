@@ -20,32 +20,58 @@
 #
 
 import sys, glob
+import threading
+
 sys.path.append('gen-py')
 #sys.path.insert(0, glob.glob('../../lib/py/build/lib.*')[0])
 
 from yradical import RadicalPilotInterface
+import radical_server as rs
 
 from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 from thrift.server import TServer
 
+def extract_configs(task_file):
+  configs = {}
+  configs['db_url'] = 'mongodb://127.0.0.1:50055'
+  configs['userpass'] = 'userpass'
+  print "task_file is ignored now : ", task_file
+  return configs
+
 class RadicalPilotHandler:
   def __init__(self):
-    self.log = {}
-
+    self.session = 'NULL'
+    self.pmgr    = 'NULL'
+    self.log     = {}
+    self.configs = {}
+    self.rp_lock = threading.Lock()
+    self.task_lookup = {}
+    
   def submit_task(self, task_filename):
+    '''
+    if self.configs == {}:
+      with self.rp_lock and self.configs == {}:
+        self.configs = extract_configs(task_filename)
+        [self.session, self.pmgr, self.umgr] = rs.radical_init(configs)
+
+    cu_list = rs.submit_task(self.umgr)    
+    self.task_lookup[task_filename] = cu_list[0]
+    '''
     print "Task_filename : ", task_filename
-    return "Task:122"
 
   def cancel_task(self, task_name):
     print "Cancelling task :", task_name
     return "Cancelled task"
 
   def status_task(self, task_name):
+    '''
     print "Status task :", task_name
+    print self.task_lookup[task_name]
+    print "State : ", self.task_lookup[task_name].state
+    '''
     return "Status task: [ACTIVE/DONE]"
-
 
   def getStruct(self, key):
     print 'getStruct(%d)' % (key)
