@@ -61,7 +61,9 @@ try:
   transport.open()
 
   print client.submit_task("foo")
-  print client.status_task("asdsdad")
+  print client.submit_task("foo12")
+  print client.submit_task("foo232342")
+  print client.status_task("foo12")
   print client.cancel_task("asdasda")
 
   # Kill server
