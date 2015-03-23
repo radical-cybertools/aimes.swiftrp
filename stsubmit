@@ -38,7 +38,7 @@ while read LINE; do
 	    directory=*)
 		DIR=${LINE#directory=}
 		;;
-	    arg=*)		
+	    arg=*)
 		if [[ ${LINE#arg=} == *cscript*pl ]]
 		then
                     # Replacing temporary worker script with a specific remote worker script

@@ -10,7 +10,7 @@ Swift interfaces with the execution provider via three calls :
 Note: Each submission is a separate task, no batching is possible here.
 
 
-TODOs:
+TODOs and potential issues:
 
 1. Daemonize the radical pilot server script with thrift
 ..* Test with stubs
@@ -24,3 +24,6 @@ TODOs:
 
 4. Handle transfer of data.
 ..* With staging method direct, the files to stage are explicitly provided, this can be handled over to RP for staging.
+
+5. Walltimes.
+..* Pilots have walltimes, compute units 
