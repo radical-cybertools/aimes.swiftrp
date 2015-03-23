@@ -88,16 +88,16 @@ if __name__ == "__main__":
         u2 = submit_task(umgr)
 
         print "Waiting for CUs to complete ..."
-        
+
         while True:
-            
+
             print "State of task 1 : ", u1[0].state
             print "State of task 2 : ", u2[0].state
             if u1[0].state == 'Done' and u2[0].state == rp.states.DONE:
                 break
             else:
                 time.sleep(10)
-            
+
         print "All CUs completed successfully!"
 
 
