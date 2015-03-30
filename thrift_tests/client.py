@@ -101,9 +101,6 @@ if __name__ == '__main__' :
 	else:
 		logging.basicConfig(filename='/dev/null', level=logging.DEBUG)
 
-	config_file  = ( args.status or args.submit or args.cancel )
-	configs, driver = init(config_file)
-
 	#try:
 	transport = TSocket.TSocket('localhost', 9090)
 	# Buffering is critical. Raw sockets are very slow
@@ -117,6 +114,7 @@ if __name__ == '__main__' :
 
 	if args.submit :
 		#print configs
+		configs, driver = init(args.submit)
 		print client.submit_task(args.submit)
 
 	elif args.status :

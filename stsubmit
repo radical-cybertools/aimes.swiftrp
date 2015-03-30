@@ -39,7 +39,7 @@ RADICAL_SERVER=/home/yadunand/swift-k/cogkit/modules/provider-localscheduler/lib
 
 start_daemon()
 {
-    python $RADICAL_SERVER &> $RUNDIR/rp_server.log &
+    python $RADICAL_SERVER $RUNDIR/rp_server.log &> $RUNDIR/rp_server.log &
 }
 
 start_daemon; sleep 3;
@@ -146,7 +146,7 @@ log "CMD   : $CMD"
 DIR=/tmp/
 
 cat<<EOF >> $SUBMIT_SCRIPT
-CMD_STRING="mkdir $DIR; cd $DIR; $CMD"
+CMD_STRING="$CMD"
 STAGEIN_SOURCE=$STAGEIN_SOURCE
 STAGEIN_DEST=$STAGEIN_DEST
 STAGEOUT_SOURCE=$STAGEOUT_SOURCE

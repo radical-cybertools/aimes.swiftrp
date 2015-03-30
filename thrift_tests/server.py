@@ -94,16 +94,42 @@ def rp_radical_init (configs):
 		sys.exit (-1)
 
 
-def rp_compose_compute_unit():
+def rp_compose_compute_unit(task_filename):
+
+	task_desc = open(task_filename, 'r').readlines()
+	# Strip out the definition for the executable
+	if task_desc[0].startswith('CMD_STRING="') :
+		task_string     = task_desc[0][12:][:-2]
+		task_executable = task_string.split(' ')[0]
+		task_args       = task_string[len(task_executable)+1:]
+
+	input_sd = {
+		'source': '/home/yadunand/swift-k/dist/swift-svn/libexec/_swiftwrap.staging',
+		'target': '_swiftwrap.staging'
+    }
+
+	output_sd = {
+		'source': 'wrapper.error',
+		'target': 'date-f9icln6m.error'
+    }
+
 	cudesc = rp.ComputeUnitDescription()
 	cudesc.environment = {'CU_NO': 1}
-	cudesc.executable  = "/bin/sleep"
-	cudesc.arguments   = ['$((30 + $(($RANDOM % 30))))']
+	cudesc.executable  = task_executable
+	cudesc.arguments   = task_args.split(' ')
 	cudesc.cores       = 1
+	cudesc.input_staging =  input_sd
+	cudesc.output_staging = output_sd
+
+	logging.debug("EXEC : " + cudesc.executable)
+	logging.debug("ARGS : " + task_args)
+	#logging.debug("input_staging : " + cudesc.input_staging)
+	#logging.debug("output_staging : " + cudesc.output_staging)
+
 	return [cudesc]
 
-def rp_submit_task(unit_manager):
-	cu_desc = rp_compose_compute_unit()
+def rp_submit_task(unit_manager, task_filename):
+	cu_desc = rp_compose_compute_unit(task_filename)
 	c_unit  = unit_manager.submit_units(cu_desc)
 	return c_unit
 
@@ -132,7 +158,7 @@ class RadicalPilotHandler:
 			print [self.session, self.pmgr, self.umgr]
 			logging.debug("done with radical_init")
 
-		cu_list = rp_submit_task(self.umgr)
+		cu_list = rp_submit_task(self.umgr, task_filename)
 		print cu_list[0]
 		hash_id = str(len(self.task_lookup))
 		self.task_lookup[hash_id] = cu_list[0]
@@ -156,7 +182,7 @@ class RadicalPilotHandler:
 
 		state = self.task_lookup[task_name].state
 		if state not in radical_states :
-			logging.debug( "[DEBUG] task_name:" + task_name " state: " +  state)
+			logging.debug( "[DEBUG] task_name:" + task_name + " state: " +  state)
 			return str(task_name) + " Q"
 
 		logging.debug("[DEBUG] task_name:{0} state:{1}".format(task_name, state))
@@ -174,8 +200,10 @@ class RadicalPilotHandler:
 		print 'zip()'
 
 
-
 # Start logging
+if ( len(sys.argv) < 2 ):
+	print "[ERROR] Missing log_file argument"
+
 logging.basicConfig(filename=sys.argv[1], level=logging.DEBUG)
 logging.debug('Starting the server...')
 
@@ -193,3 +221,4 @@ server = TServer.TSimpleServer(processor, transport, tfactory, pfactory)
 
 server.serve()
 logging.debug('done.')
+
