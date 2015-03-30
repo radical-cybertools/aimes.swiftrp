@@ -22,8 +22,8 @@
 import sys, glob
 import argparse
 import logging
-
-sys.path.append('gen-py')
+import os
+sys.path.append('/home/yadunand/swift-k/cogkit/modules/provider-localscheduler/libexec/radical-pilot-provider/thrift_tests/gen-py')
 
 from radical_interface import RadicalPilotInterface
 from radical_interface.ttypes import *
@@ -116,15 +116,15 @@ if __name__ == '__main__' :
 	transport.open()
 
 	if args.submit :
-		print configs
+		#print configs
 		print client.submit_task(args.submit)
 
 	elif args.status :
-		print configs
+		#print configs
 		print client.status_task(args.status)
 
 	elif args.cancel :
-		print configs
+		#print configs
 		print client.cancel_task(args.cancel)
 
 	elif args.terminate :

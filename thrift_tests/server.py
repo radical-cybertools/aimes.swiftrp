@@ -21,8 +21,9 @@
 
 import sys, glob
 import logging
-logging.basicConfig()
-sys.path.append('gen-py')
+import random
+
+sys.path.append('/home/yadunand/swift-k/cogkit/modules/provider-localscheduler/libexec/radical-pilot-provider/thrift_tests/gen-py')
 #sys.path.insert(0, glob.glob('../../lib/py/build/lib.*')[0])
 
 from radical_interface import RadicalPilotInterface
@@ -106,6 +107,7 @@ def rp_submit_task(unit_manager):
 	c_unit  = unit_manager.submit_units(cu_desc)
 	return c_unit
 
+
 class RadicalPilotHandler:
 	def __init__(self):
 		self.session = 'NULL'
@@ -116,7 +118,7 @@ class RadicalPilotHandler:
 		#self.rp_lock = threading.Lock()
 		self.task_lookup = {}
 		self.session = 'NULL'
-		print "Init done"
+		logging.debug("Init done")
 
 	def submit_task(self, task_filename):
 		print "[SUBMIT_TASK] :", task_filename
@@ -124,34 +126,44 @@ class RadicalPilotHandler:
 		# If self.configs is empty, this is the first task, which requires
 		# radical pilots to be setup
 		if not self.configs :
-			print "[SUBMIT_TASK] : Starting radical.pilots"
+			logging.debug("[SUBMIT_TASK] : Starting radical.pilots")
 			self.configs = extract_configs(task_filename)
 			[self.session, self.pmgr, self.umgr] = rp_radical_init(self.configs)
 			print [self.session, self.pmgr, self.umgr]
-			print "done with radical_init"
+			logging.debug("done with radical_init")
 
 		cu_list = rp_submit_task(self.umgr)
 		print cu_list[0]
-		self.task_lookup[task_filename] = cu_list[0]
+		hash_id = str(len(self.task_lookup))
+		self.task_lookup[hash_id] = cu_list[0]
 
-		return "Task_filename : " + task_filename
+		return hash_id
 
 	def cancel_task(self, task_name):
-		print "Cancelling task :", task_name
+		logging.debug("Cancelling task :" + task_name)
 		return "Cancelled task"
 
 	def status_task(self, task_name):
-		print "Status task :", task_name
-		'''
 
-		print "State : ", self.task_lookup[task_name].state
-		'''
-		print self.task_lookup[task_name]
-		print self.task_lookup[task_name].state
-		return "Status task: [ACTIVE/DONE]"
+		radical_states = { 'PendingExecution' : 'Q',
+						   'Scheduling'       : 'Q',
+						   'Executing'        : 'R',
+						   'Done'             : 'C',
+						   'Failed'           : 'F' }
+
+		if task_name not in self.task_lookup:
+			return str(task_name) + " F -1 Task id not in the Radical Pilot lookup registry"
+
+		state = self.task_lookup[task_name].state
+		if state not in radical_states :
+			logging.debug( "[DEBUG] task_name:" + task_name " state: " +  state)
+			return str(task_name) + " Q"
+
+		logging.debug("[DEBUG] task_name:{0} state:{1}".format(task_name, state))
+		return str(task_name) + " " + radical_states[state]
 
 	def server_die(self, die_string):
-		print "Server terminating. Received message: ", die_string
+		logging.debug("Server terminating. Received message: " + die_string)
 		exit(0)
 
 	def getStruct(self, key):
@@ -161,6 +173,11 @@ class RadicalPilotHandler:
 	def zip(self):
 		print 'zip()'
 
+
+
+# Start logging
+logging.basicConfig(filename=sys.argv[1], level=logging.DEBUG)
+logging.debug('Starting the server...')
 
 handler   = RadicalPilotHandler()
 processor = RadicalPilotInterface.Processor(handler)
@@ -174,6 +191,5 @@ server = TServer.TSimpleServer(processor, transport, tfactory, pfactory)
 #server = TServer.TThreadedServer(processor, transport, tfactory, pfactory)
 #server = TServer.TThreadPoolServer(processor, transport, tfactory, pfactory)
 
-print 'Starting the server...'
 server.serve()
-print 'done.'
+logging.debug('done.')

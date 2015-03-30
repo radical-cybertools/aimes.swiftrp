@@ -20,7 +20,6 @@ def unit_state_cb (unit, state) :
 
 def radical_init (configs):
     try:
-        '''
         session = rp.Session(database_url=configs['db_url'])
         c = rp.Context(configs['userpass'])
         session.add_context(c)
@@ -52,7 +51,7 @@ def radical_init (configs):
         # Add the created ComputePilot to the UnitManager.
         print "Registering Compute Pilot with Unit Manager ..."
         umgr.add_pilots(pilot)
-        '''
+
         session = "session_name"
         pmgr    = "pmgr_foo"
         umgr    = "umpr_blah"
@@ -70,7 +69,7 @@ def compose_compute_unit():
     cudesc.arguments   = ['$((30 + $(($RANDOM % 30))))']
     cudesc.cores       = 1
     return [cudesc]
-        
+
 def submit_task(unit_manager):
     cu_desc = compose_compute_unit()
     c_unit  = unit_manager.submit_units(cu_desc)
