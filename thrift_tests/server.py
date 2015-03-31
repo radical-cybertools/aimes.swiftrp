@@ -97,6 +97,9 @@ def rp_radical_init (configs):
 def rp_compose_compute_unit(task_filename):
 
 	task_desc = open(task_filename, 'r').readlines()
+
+	for line, index in 
+
 	# Strip out the definition for the executable
 	if task_desc[0].startswith('CMD_STRING="') :
 		task_string     = task_desc[0][12:][:-2]
@@ -108,9 +111,13 @@ def rp_compose_compute_unit(task_filename):
 		'target': '_swiftwrap.staging'
     }
 
+	'''
+	for lines in task_desc :
+		if lines
+	'''
 	output_sd = {
-		'source': 'wrapper.error',
-		'target': 'date-f9icln6m.error'
+		'source': 'wrapper.log',
+		'target': '/home/yadunand/swift-k/tests/aimes_testing/wrapper.log'
     }
 
 	cudesc = rp.ComputeUnitDescription()
