@@ -93,45 +93,97 @@ def rp_radical_init (configs):
 		print "An error occurred: %s" % ((str(e)))
 		sys.exit (-1)
 
+def filepath_cleanup(filepath):
+	fpath = filepath.strip('\n')
+	if fpath.startswith('file://localhost/'):
+		l = len('file://localhost/')
+		fpath = fpath[l:]
+	return fpath
 
 def rp_compose_compute_unit(task_filename):
 
 	task_desc = open(task_filename, 'r').readlines()
+	index     = 0
+	args      = []
+	stageins  = []
+	stageouts = []
+	env_vars  = []
+	while index < len(task_desc):
+		# We don't process directory options.
+		if (task_desc[index].startswith("directory=")):
+			l = len("directory=")
 
-	for line, index in 
 
-	# Strip out the definition for the executable
-	if task_desc[0].startswith('CMD_STRING="') :
-		task_string     = task_desc[0][12:][:-2]
-		task_executable = task_string.split(' ')[0]
-		task_args       = task_string[len(task_executable)+1:]
+		elif (task_desc[index].startswith("env.")):
+			l   = len("env.")
+			[key,value] = task_desc[index][l:].strip('\n').split("=")
+			print env_vars.append({key,value})
 
-	input_sd = {
-		'source': '/home/yadunand/swift-k/dist/swift-svn/libexec/_swiftwrap.staging',
-		'target': '_swiftwrap.staging'
-    }
+		elif (task_desc[index].startswith("executable=")):
+			l = len("executable=")
+			executable = task_desc[index][l:].strip('\n')
 
-	'''
-	for lines in task_desc :
-		if lines
-	'''
-	output_sd = {
-		'source': 'wrapper.log',
-		'target': '/home/yadunand/swift-k/tests/aimes_testing/wrapper.log'
-    }
+		elif (task_desc[index].startswith("arg=")):
+			l = len("arg=")
+			args.append(task_desc[index][l:].strip('\n'))
 
-	cudesc = rp.ComputeUnitDescription()
-	cudesc.environment = {'CU_NO': 1}
-	cudesc.executable  = task_executable
-	cudesc.arguments   = task_args.split(' ')
-	cudesc.cores       = 1
-	cudesc.input_staging =  input_sd
-	cudesc.output_staging = output_sd
+		elif (task_desc[index].startswith("stagein.source=")):
+			stagein_item = {}
+ 			l = len("stagein.source=")
+			stagein_item['source'] = filepath_cleanup(task_desc[index][l:])
+			index += 1
+			if (task_desc[index].startswith("stagein.destination=")):
+				l = len("stagein.destination=")
+				stagein_item['destination'] = filepath_cleanup(task_desc[index][l:])
+				index += 1
+				if (task_desc[index].startswith("stagein.mode=")):
+					l = len("stagein.mode=")
+					# Ignore mode for now
+					#stagein_item['destination'] = task_desc[index][l:].strip('\n')
+					#index += 1
+				else:
+					index -= 1
+			else:
+				printf("[ERROR] Stagein source must have a destination")
+			stageins.append(stagein_item)
 
-	logging.debug("EXEC : " + cudesc.executable)
-	logging.debug("ARGS : " + task_args)
-	#logging.debug("input_staging : " + cudesc.input_staging)
-	#logging.debug("output_staging : " + cudesc.output_staging)
+		elif (task_desc[index].startswith("stageout.source=")):
+			stageout_item = {}
+ 			l = len("stageout.source=")
+			stageout_item['source'] = filepath_cleanup(task_desc[index][l:])
+			index += 1
+			if (task_desc[index].startswith("stageout.destination=")):
+				l = len("stageout.destination=")
+				stageout_item['destination'] = filepath_cleanup(task_desc[index][l:])
+				index += 1
+				if (task_desc[index].startswith("stageout.mode=")):
+					l = len("stageout.mode=")
+					# Ignore mode for now
+					#stageout_item['destination'] = task_desc[index][l:].strip('\n')
+					#index += 1
+				else:
+					index -= 1
+			else:
+				printf("[ERROR] Stageout source must have a destination")
+			stageouts.append(stageout_item)
+
+		else:
+			logging.debug("ignoring option : {0}".format(task_desc[index]))
+
+		index += 1
+
+	logging.debug("ARGS      : {0}".format(args))
+	logging.debug("EXEC      : {0}".format(executable))
+	logging.debug("STAGEINS  : {0}".format(stageins))
+	logging.debug("STAGEOUTS : {0}".format(stageouts))
+
+	cudesc                = rp.ComputeUnitDescription()
+	cudesc.environment    = {'CU_NO': 1}
+	cudesc.executable     = executable
+	cudesc.arguments      = args
+	cudesc.cores          = 1
+	cudesc.input_staging  = stageins
+	cudesc.output_staging = stageouts
 
 	return [cudesc]
 

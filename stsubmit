@@ -28,7 +28,7 @@ touch $SUBMIT_SCRIPT
 [[ "$LOGGING" == "1" ]] && mkdir -p $(dirname $LOG)
 log()
 {
-    [[ "$LOGGING" == "1" ]] && echo $* >> $LOG
+    [[ "$LOGGING" == "1" ]] && echo "[PID:$$] $*" >> $LOG
 }
 
 # TODO : UPDATE THIS BEFORE PUSH
@@ -39,124 +39,33 @@ RADICAL_SERVER=/home/yadunand/swift-k/cogkit/modules/provider-localscheduler/lib
 
 start_daemon()
 {
-    python $RADICAL_SERVER $RUNDIR/rp_server.log &> $RUNDIR/rp_server.log &
+    # Ensure that only one application acquires the lock and starts the RADICAL_SERVER
+    if mkdir "$RP_LOCK" ; then
+        log "Locking succeeded"
+        python $RADICAL_SERVER $RUNDIR/rp_server.log &> $RUNDIR/rp_server.log &
+        sleep 3;
+        echo "[PID:$$] Done" > $RP_LOCK/release
+    else
+        log "Could not acquire lock"
+        # Wait in a spin look till $RP_LOCK/release file is created
+        while [[ ! -f $RP_LOCK/release ]]
+        do
+            sleep 1
+            log "Waiting for lock holder to finish"
+        done
+        log "lock holder has released lock"
+    fi
 }
 
-start_daemon; sleep 3;
+start_daemon; 
 
 while read LINE; do
-	echo $LINE >>/tmp/stsubmit
-	case $LINE in
-	    executable=*)
-		EXECUTABLE=${LINE#executable=}
-		;;
-	    directory=*)
-		DIR=${LINE#directory=}
-		;;
-	    arg=*)
-		if [[ ${LINE#arg=} == *cscript*pl ]]
-		then
-                    # Replacing temporary worker script with a specific remote worker script
-                    ARGS="$ARGS /usr/local/bin/swift-trunk/bin/worker.pl"
-		else
-                    ARGS="$ARGS ${LINE#arg=}"
-		fi
-		;;
-	    attr.*)
-		LINE2=${LINE#attr.}
-		if [[ $LINE2 == ec2* ]]
-		then
-		    echo $LINE2 >> $SUBMIT_SCRIPT
-		fi
-		;;
-	    stdin.location=*)
-		STDINLOC=${LINE#stdin.location=}
-		;;
-	    stdin.path=*)
-		STDINPATH=${LINE#stdin.path=}
-		;;
-	    stdout.location=*)
-		STDOUTLOC=${LINE#stdout.location=}
-		;;
-	    stdout.path=*)
-		STDOUTPATH=${LINE#stdout.path=}
-		;;
-	    stderr.location=*)
-		STDERRLOC=${LINE#stderr.location=}
-		;;
-	    stderr.path=*)
-		STDERRPATH=${LINE#stderr.path=}
-		;;
-	    env.*)
-		LINE2=${LINE#env.}
-		# split on '='
-		ELS=(${LINE2//=/})
-		NAME=${ELS[0]}
-		VALUE=${ELS[1]}
-		export $NAME=$VALUE
-		;;
-        stagein.source=*)
-        STAGEIN_SOURCE=${LINE#stagein.source=}
-        ;;
-        stagein.destination=*)
-        STAGEIN_DEST=${LINE#stagein.destination=}
-        ;;
-        stageout.source=*)
-        STAGEOUT_SOURCE=${LINE#stageout.source=}
-        ;;
-        stageout.destination=*)
-        STAGEOUT_DEST=${LINE#stageout.destination=}
-        ;;
-        stageout.mode=*)
-        STAGEOUT_MODE=${LINE#stageout.mode=}
-        ;;
-        cleanup=*)
-        CLEANUP=${LINE#cleanup=}
-        ;;
-
-	    *)
-		echo "Don't know how to interpret line: $LINE" >&2
-		exit 2
-	esac
+    echo $LINE >> $SUBMIT_SCRIPT
 done < /dev/stdin
-
-if [ "$STDOUTLOC" == "tmp" ]; then
-	STDOUTPATH=$(mktemp)
-	echo "stdout.path=$STDOUTPATH"
-fi
-if [ "$STDOUTPATH" != "" ]; then
-	STDOUT="1> $STDOUTPATH"
-fi
-
-if [ "$STDERRLOC" == "tmp" ]; then
-	STDERRPATH=$(mktemp)
-	echo "stderr.path=$STDERRPATH"
-fi
-if [ "$STDERRPATH" != "" ]; then
-	STDERR="2> $STDERRPATH"
-fi
-
-if [ "$STDINLOC" != "" ]; then
-	STDIN="< $STDINLOC"
-fi
-
-CMD="$EXECUTABLE $ARGS $STDIN $STDOUT $STDERR"
-log "CMD   : $CMD"
-
-DIR=/tmp/
-
-cat<<EOF >> $SUBMIT_SCRIPT
-CMD_STRING="$CMD"
-STAGEIN_SOURCE=$STAGEIN_SOURCE
-STAGEIN_DEST=$STAGEIN_DEST
-STAGEOUT_SOURCE=$STAGEOUT_SOURCE
-STAGEOUT_DEST=$STAGEOUT_DEST
-EOF
 
 log "##############SUBMIT_SCRIPT###################"
 cat $SUBMIT_SCRIPT >> $LOG
 log "##############SUBMIT_SCRIPT###################"
-
 
 log "[DEBUG] PWD : $PWD"
 log "[DEBUG] python $RADICAL_PY --logfile $LOG --submit $SUBMIT_SCRIPT"
