@@ -44,10 +44,16 @@ def extract_configs(task_file):
 
 def pilot_state_cb (pilot, state) :
 	print "[Callback]: ComputePilot '%s' state: %s." % (pilot.uid, state)
+	if not pilot:
+		return
+
 	if  state == rp.FAILED :
 		sys.exit (1)
 
 def unit_state_cb (unit, state) :
+	if not unit:
+		return
+
 	print "[Callback]: ComputeUnit  '%s' state: %s." % (unit.uid, state)
 
 def rp_radical_init (configs):

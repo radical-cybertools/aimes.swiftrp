@@ -15,10 +15,8 @@ log()
     [[ "$LOGGING" == "1" ]] && echo $* >> $LOG
 }
 
-JOBID=$1
-
-if [[ "$1" != "" ]]
-then
-    log "Stat'ing for $1 PWD: $PWD"
-    python $RADICAL_PY --logfile $LOG --status $1 | tee -a $LOG
-fi
+for JOBID in ${*}
+do
+    log "Stat'ing for $JOBID"
+    python $RADICAL_PY --logfile $LOG --status $JOBID | tee -a $LOG
+done
