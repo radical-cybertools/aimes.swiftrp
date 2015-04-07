@@ -34,8 +34,8 @@ log()
 # TODO : UPDATE THIS BEFORE PUSH
 #RADICAL_PY=$SWIFT_HOME/libexec/ec2-cloud-provider/cloud.py
 #activate
-RADICAL_PY=/home/yadunand/swift-k/cogkit/modules/provider-localscheduler/libexec/radical-pilot-provider/thrift_tests/client.py
-RADICAL_SERVER=/home/yadunand/swift-k/cogkit/modules/provider-localscheduler/libexec/radical-pilot-provider/thrift_tests/server.py
+RADICAL_PY=$SWIFT_HOME/libexec/radical-pilot-provider/thrift_tests/client.py
+RADICAL_SERVER=$SWIFT_HOME/libexec/radical-pilot-provider/thrift_tests/server.py
 
 start_daemon()
 {
@@ -57,7 +57,7 @@ start_daemon()
     fi
 }
 
-start_daemon; 
+start_daemon;
 
 while read LINE; do
     echo $LINE >> $SUBMIT_SCRIPT

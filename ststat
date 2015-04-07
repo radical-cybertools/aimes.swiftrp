@@ -7,7 +7,7 @@ RUNDIR=${RUNDIRS##*\ }
 LOG=$RUNDIR/scripts/log
 
 
-RADICAL_PY=/home/yadunand/swift-k/cogkit/modules/provider-localscheduler/libexec/radical-pilot-provider/thrift_tests/client.py
+RADICAL_PY=$SWIFT_HOME/libexec/radical-pilot-provider/thrift_tests/client.py
 
 [[ "$LOGGING" == "1" ]] && mkdir -p $(dirname $LOG)
 log()
