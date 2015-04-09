@@ -22,13 +22,13 @@
 import sys, glob
 import logging
 import random
+import os
 
-sys.path.append('/home/yadunand/swift-k/cogkit/modules/provider-localscheduler/libexec/radical-pilot-provider/thrift_tests/gen-py')
-#sys.path.insert(0, glob.glob('../../lib/py/build/lib.*')[0])
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/gen-py')
 
 from radical_interface import RadicalPilotInterface
 import radical.pilot as rp
-
 
 from thrift.transport import TSocket
 from thrift.transport import TTransport
@@ -37,7 +37,7 @@ from thrift.server import TServer
 
 def extract_configs(task_file):
 	configs = {}
-	configs['db_url'] = 'mongodb://127.0.0.1:50055'
+	configs['db_url']   = 'mongodb://127.0.0.1:50055'
 	configs['userpass'] = 'userpass'
 	print "[extract_configs] task_file is ignored now : ", task_file
 	return configs
@@ -118,7 +118,6 @@ def rp_compose_compute_unit(task_filename):
 		# We don't process directory options.
 		if (task_desc[index].startswith("directory=")):
 			l = len("directory=")
-
 
 		elif (task_desc[index].startswith("env.")):
 			l   = len("env.")

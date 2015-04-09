@@ -1,18 +1,6 @@
 #!/bin/bash
 
 rm -f /tmp/stsubmit
-EXECUTABLE=
-DIR=
-ARGS=
-STDOUTLOC=
-STDOUTPATH=
-STDERRLOC=
-STDERRPATH=
-STDINLOC=
-STDINPATH=
-STDIN=
-STDOUT=
-STDERR=
 
 LOGGING=1 # Either 1 or 0
 RUNDIRS=$(echo run[0-9][0-9][0-9])
