@@ -37,8 +37,18 @@ from thrift.server import TServer
 
 def extract_configs(task_file):
 	configs = {}
-	configs['db_url']   = 'mongodb://127.0.0.1:50055'
+	configs['mongodb']  = 'mongodb://127.0.0.1:50055'
 	configs['userpass'] = 'userpass'
+	index               = 0
+	task_desc           = open(task_filename, 'r').readlines()
+
+	while index < len(task_desc):
+
+		if (task_desc[index].startswith("attr.radical-pilot.")):
+			l   = len("attr.radical-pilot.mongodb.")
+			[key,value] = task_desc[index][l:].strip('\n').split("=")
+			configs[key]= value
+
 	print "[extract_configs] task_file is ignored now : ", task_file
 	return configs
 
@@ -59,7 +69,7 @@ def unit_state_cb (unit, state) :
 def rp_radical_init (configs):
 	print "[rp_radical_init]"
 	try:
-		session = rp.Session(database_url=configs['db_url'])
+		session = rp.Session(database_url=configs['mongodb'])
 		c = rp.Context(configs['userpass'])
 		session.add_context(c)
 		print "Initializing Pilot Manager ..."
@@ -77,6 +87,7 @@ def rp_radical_init (configs):
 		# change their state.
 		umgr.register_callback(unit_state_cb)
 
+		
 		pdesc = rp.ComputePilotDescription ()
 		pdesc.resource = "local.localhost"  # NOTE: This is a "label", not a hostname
 		pdesc.runtime  = 10 # minutes

@@ -30,8 +30,8 @@ start_daemon()
     # Ensure that only one application acquires the lock and starts the RADICAL_SERVER
     if mkdir "$RP_LOCK" ; then
         log "Locking succeeded"
-        python $RADICAL_SERVER $RUNDIR/rp_server.log &> $RUNDIR/rp_server.log &
-        sleep 3;
+        python $RADICAL_SERVER $RUNDIR/rp_server.log &>> $RUNDIR/rp_server.log &
+        sleep 2;
         echo "[PID:$$] Done" > $RP_LOCK/release
     else
         log "Could not acquire lock"
@@ -46,6 +46,14 @@ start_daemon()
 }
 
 start_daemon;
+grep "Init done" rp_server.log > /dev/null
+# Assume that the server has failed if Init done is not posted to rp_server.log
+if [[ "$?" != 0 ]]
+then
+    echo "[ERROR] RP_SERVER Start failed" 1>&2
+    cat rp_server.log 1>&2
+    exit -1
+fi
 
 while read LINE; do
     echo $LINE >> $SUBMIT_SCRIPT
