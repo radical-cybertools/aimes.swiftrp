@@ -46,9 +46,9 @@ start_daemon()
 }
 
 start_daemon;
-grep "Init done" rp_server.log > /dev/null
+grep "[Errno 98]" rp_server.log > /dev/null
 # Assume that the server has failed if Init done is not posted to rp_server.log
-if [[ "$?" != 0 ]]
+if [[ "$?" == 0 ]]
 then
     echo "[ERROR] RP_SERVER Start failed" 1>&2
     cat rp_server.log 1>&2

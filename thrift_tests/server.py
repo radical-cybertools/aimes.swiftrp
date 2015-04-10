@@ -37,19 +37,23 @@ from thrift.server import TServer
 
 def extract_configs(task_file):
 	configs = {}
-	configs['mongodb']  = 'mongodb://127.0.0.1:50055'
-	configs['userpass'] = 'userpass'
 	index               = 0
-	task_desc           = open(task_filename, 'r').readlines()
+	task_desc           = open(task_file, 'r').readlines()
+	# Set some default pilot confs
+	pilot_confs         = {'mongodb'  : 'mongodb://127.0.0.1:50055',
+						   'userpass' : 'userpass',
+						   'cleanup'  : False}
 
 	while index < len(task_desc):
-
 		if (task_desc[index].startswith("attr.radical-pilot.")):
-			l   = len("attr.radical-pilot.mongodb.")
+			l   = len("attr.radical-pilot.")
 			[key,value] = task_desc[index][l:].strip('\n').split("=")
-			configs[key]= value
+			pilot_confs[key]= value
 
-	print "[extract_configs] task_file is ignored now : ", task_file
+		index += 1
+
+	configs['pilot_confs'] = pilot_confs
+	print "Extracted configs : ", configs
 	return configs
 
 def pilot_state_cb (pilot, state) :
@@ -69,8 +73,8 @@ def unit_state_cb (unit, state) :
 def rp_radical_init (configs):
 	print "[rp_radical_init]"
 	try:
-		session = rp.Session(database_url=configs['mongodb'])
-		c = rp.Context(configs['userpass'])
+		session = rp.Session(database_url=configs['pilot_confs']['mongodb'])
+		c = rp.Context(configs['pilot_confs']['userpass'])
 		session.add_context(c)
 		print "Initializing Pilot Manager ..."
 		pmgr = rp.PilotManager(session=session)
@@ -87,12 +91,11 @@ def rp_radical_init (configs):
 		# change their state.
 		umgr.register_callback(unit_state_cb)
 
-		
 		pdesc = rp.ComputePilotDescription ()
-		pdesc.resource = "local.localhost"  # NOTE: This is a "label", not a hostname
-		pdesc.runtime  = 10 # minutes
-		pdesc.cores    = 1
-		pdesc.cleanup  = True
+		pdesc.resource = configs['pilot_confs']['resource']
+		pdesc.runtime  = int(configs['pilot_confs']['runtime'])
+		pdesc.cores    = int(configs['pilot_confs']['cores'])
+		pdesc.cleanup  = True if configs['pilot_confs']['cleanup'] in ["true", "True"] else False
 
 		# submit the pilot.
 		print "Submitting Compute Pilot to Pilot Manager ..."
@@ -124,7 +127,7 @@ def rp_compose_compute_unit(task_filename):
 	args      = []
 	stageins  = []
 	stageouts = []
-	env_vars  = []
+	env_vars  = {}
 	while index < len(task_desc):
 		# We don't process directory options.
 		if (task_desc[index].startswith("directory=")):
@@ -133,7 +136,7 @@ def rp_compose_compute_unit(task_filename):
 		elif (task_desc[index].startswith("env.")):
 			l   = len("env.")
 			[key,value] = task_desc[index][l:].strip('\n').split("=")
-			print env_vars.append({key,value})
+			env_vars[key] = value
 
 		elif (task_desc[index].startswith("executable=")):
 			l = len("executable=")
@@ -184,7 +187,7 @@ def rp_compose_compute_unit(task_filename):
 			stageouts.append(stageout_item)
 
 		else:
-			logging.debug("ignoring option : {0}".format(task_desc[index]))
+			logging.debug("ignoring option : {0}".format(task_desc[index].strip('\n')))
 
 		index += 1
 
@@ -194,13 +197,12 @@ def rp_compose_compute_unit(task_filename):
 	logging.debug("STAGEOUTS : {0}".format(stageouts))
 
 	cudesc                = rp.ComputeUnitDescription()
-	cudesc.environment    = {'CU_NO': 1}
+	cudesc.environment    = env_vars
 	cudesc.executable     = executable
 	cudesc.arguments      = args
 	cudesc.cores          = 1
 	cudesc.input_staging  = stageins
 	cudesc.output_staging = stageouts
-
 	return [cudesc]
 
 def rp_submit_task(unit_manager, task_filename):
@@ -229,6 +231,7 @@ class RadicalPilotHandler:
 		if not self.configs :
 			logging.debug("[SUBMIT_TASK] : Starting radical.pilots")
 			self.configs = extract_configs(task_filename)
+			logging.debug("Extracting configs done")
 			[self.session, self.pmgr, self.umgr] = rp_radical_init(self.configs)
 			print [self.session, self.pmgr, self.umgr]
 			logging.debug("done with radical_init")
