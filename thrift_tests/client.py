@@ -23,7 +23,8 @@ import sys, glob
 import argparse
 import logging
 import os
-sys.path.append('/home/yadunand/swift-k/cogkit/modules/provider-localscheduler/libexec/radical-pilot-provider/thrift_tests/gen-py')
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/gen-py')
 
 from radical_interface import RadicalPilotInterface
 from radical_interface.ttypes import *

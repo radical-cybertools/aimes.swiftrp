@@ -24,7 +24,6 @@ import logging
 import random
 import os
 
-
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/gen-py')
 
 from radical_interface import RadicalPilotInterface
